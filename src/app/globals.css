@@ -1,0 +1,122 @@
+@import "tailwindcss";
+
+/* Paleta inspirada no Padrão Digital de Governo (gov.br/ds), contraste AA. */
+:root {
+  --fundo: #ffffff;
+  --fundo-suave: #f8f8f8;
+  --texto: #1b1b1b;
+  --texto-suave: #555555;
+  --borda: #cccccc;
+  --primaria: #1351b4;
+  --primaria-escura: #0c326f;
+  --link: #1351b4;
+  --foco: #c2850c;
+  --sucesso: #168821;
+  --erro: #b3261e;
+  --cor-orgao: var(--primaria);
+  --texto-botao: #ffffff;
+}
+
+html.alto-contraste {
+  --fundo: #000000;
+  --fundo-suave: #000000;
+  --texto: #ffffff;
+  --texto-suave: #ffffff;
+  --borda: #ffffff;
+  --primaria: #ffff00;
+  --primaria-escura: #000000;
+  --link: #ffff00;
+  --foco: #00ffff;
+  --sucesso: #00ff00;
+  --erro: #ff6b6b;
+  --cor-orgao: #000000;
+  --texto-botao: #000000;
+}
+
+@theme inline {
+  --color-fundo: var(--fundo);
+  --color-fundo-suave: var(--fundo-suave);
+  --color-texto: var(--texto);
+  --color-texto-suave: var(--texto-suave);
+  --color-borda: var(--borda);
+  --color-primaria: var(--primaria);
+  --color-primaria-escura: var(--primaria-escura);
+  --color-orgao: var(--cor-orgao);
+  --color-sucesso: var(--sucesso);
+  --color-erro: var(--erro);
+  --font-sans: "Rawline", "Raleway", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+html {
+  font-size: calc(100% * var(--escala-fonte, 1));
+}
+
+@layer base {
+  body {
+    background: var(--fundo);
+    color: var(--texto);
+    font-family: var(--font-sans);
+    line-height: 1.5;
+  }
+
+  a {
+    color: var(--link);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+}
+
+@layer components {
+  .botao-primario {
+    border-radius: 0.25rem;
+    background: var(--primaria);
+    color: var(--texto-botao);
+    padding: 0.5rem 1.25rem;
+    font-weight: 600;
+  }
+
+  .botao-primario:disabled {
+    opacity: 0.6;
+  }
+}
+
+/* No alto contraste, links e textos claros viram amarelo sobre preto. */
+html.alto-contraste .text-white,
+html.alto-contraste header a {
+  color: var(--link);
+}
+
+html.alto-contraste .faixa-orgao,
+html.alto-contraste .faixa-orgao nav {
+  background-color: #000000;
+}
+
+html.alto-contraste .faixa-orgao {
+  border-bottom: 2px solid var(--borda);
+}
+
+/* Foco sempre visível (WCAG 2.4.7) */
+:focus-visible {
+  outline: 3px solid var(--foco);
+  outline-offset: 2px;
+}
+
+.sr-only-focavel:not(:focus) {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
