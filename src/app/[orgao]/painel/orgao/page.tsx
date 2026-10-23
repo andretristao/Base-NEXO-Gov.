@@ -28,7 +28,21 @@ export default async function DadosOrgao({ params }: PageProps<"/[orgao]/painel/
           <Campo id="encarregado_nome" rotulo="Nome" defaultValue={orgao.encarregado_nome ?? ""} />
           <Campo id="encarregado_email" rotulo="E-mail" type="email" defaultValue={orgao.encarregado_email ?? ""} />
         </fieldset>
-        <Campo id="brasao_url" rotulo="Endereço da imagem do brasão" type="url" defaultValue={orgao.brasao_url ?? ""} />
+        <fieldset className="space-y-3 rounded border border-borda p-4">
+          <legend className="px-1 font-semibold">Brasão</legend>
+          {orgao.brasao_url && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={orgao.brasao_url} alt="Brasão atual" className="h-20 w-20 object-contain" />
+          )}
+          <div>
+            <label htmlFor="brasao_arquivo" className="block font-semibold">Enviar imagem do brasão</label>
+            <p id="brasao_arquivo-ajuda" className="text-sm text-texto-suave">PNG com fundo transparente, até 2 MB.</p>
+            <input id="brasao_arquivo" name="brasao_arquivo" type="file" accept="image/png,image/jpeg,image/webp"
+              aria-describedby="brasao_arquivo-ajuda" className="mt-1 w-full text-sm" />
+          </div>
+          <Campo id="brasao_url" rotulo="Ou endereço da imagem" type="url" defaultValue={orgao.brasao_url ?? ""}
+            ajuda="Deixe em branco para remover o brasão." />
+        </fieldset>
         <Campo
           id="cor_primaria"
           rotulo="Cor principal"

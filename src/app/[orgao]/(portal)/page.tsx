@@ -1,5 +1,7 @@
 import Link from "next/link";
+import { CartaoNoticia } from "@/components/CartaoNoticia";
 import { Icone } from "@/components/Icone";
+import { urlImagem, type Banner } from "@/lib/conteudo";
 import { exigirOrgao } from "@/lib/dal";
 import { servicosDoOrgao } from "@/lib/portal";
 import { formatarData, formatarDataExtenso, formatarHora, identificacao, nomeSessao } from "@/lib/protocolo";
@@ -22,7 +24,8 @@ export default async function InicioOrgao({ params }: PageProps<"/[orgao]">) {
   const inicioAno = `${new Date().getFullYear()}-01-01T00:00:00-03:00`;
 
   const supabase = await createClient();
-  const [recentes, publicadosAno, proxima, realizadasAno] = await Promise.all([
+  const agora = new Date().toISOString();
+  const [recentes, publicadosAno, proxima, realizadasAno, noticias, banners] = await Promise.all([
     supabase
       .from("documentos")
       .select("id, numero, ano, assunto, tipo_id, publicado_em")
@@ -56,13 +59,41 @@ export default async function InicioOrgao({ params }: PageProps<"/[orgao]">) {
           .eq("situacao", "realizada")
           .gte("data_hora", inicioAno)
       : Promise.resolve({ count: null }),
+    supabase
+      .from("noticias")
+      .select("id, titulo, resumo, categoria, imagem_caminho, imagem_alt, publicado_em")
+      .eq("orgao_id", orgao.id)
+      .eq("publicada", true)
+      .lte("publicado_em", agora)
+      .order("destaque", { ascending: false })
+      .order("publicado_em", { ascending: false })
+      .limit(3),
+    // a RLS mostra ao público só os banners no ar; o filtro repete a regra para a equipe
+    supabase
+      .from("banners")
+      .select("*")
+      .eq("orgao_id", orgao.id)
+      .eq("ativo", true)
+      .or(`inicio_em.is.null,inicio_em.lte.${agora}`)
+      .or(`fim_em.is.null,fim_em.gt.${agora}`)
+      .order("ordem")
+      .limit(3),
   ]);
   const sessao = proxima.data;
+  const destaques = (banners.data ?? []) as Banner[];
 
   return (
     <>
+      <h1 className="sr-only">{orgao.nome}</h1>
+
+      {destaques.length > 0 && (
+        <section aria-label="Destaques" className="mb-12 grid gap-4 lg:grid-cols-3 lg:grid-rows-2">
+          {destaques.map((b, i) => <CartaoBanner key={b.id} banner={b} principal={i === 0} sozinho={destaques.length === 1} />)}
+        </section>
+      )}
+
       <section aria-labelledby="titulo-servicos">
-        <h1 id="titulo-servicos" className="text-2xl font-bold sm:text-3xl">Como podemos ajudar?</h1>
+        <h2 id="titulo-servicos" className="text-2xl font-bold sm:text-3xl">Como podemos ajudar?</h2>
         <p className="mt-1 text-texto-suave">Serviços e informações da {orgao.nome}.</p>
         <ul className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {servicos.map((s) => {
@@ -93,6 +124,20 @@ export default async function InicioOrgao({ params }: PageProps<"/[orgao]">) {
           })}
         </ul>
       </section>
+
+      {noticias.data && noticias.data.length > 0 && (
+        <section aria-labelledby="titulo-noticias" className="mt-12">
+          <div className="flex items-baseline justify-between gap-4">
+            <h2 id="titulo-noticias" className="text-xl font-bold">Notícias</h2>
+            <Link href={`${base}/noticias`} className="flex items-center gap-1 text-sm">
+              Todas as notícias <Icone nome="seta" className="h-4 w-4" />
+            </Link>
+          </div>
+          <ul className="mt-4 grid gap-6 md:grid-cols-3">
+            {noticias.data.map((n) => <li key={n.id}><CartaoNoticia base={base} noticia={n} /></li>)}
+          </ul>
+        </section>
+      )}
 
       <div className="mt-12 grid gap-8 lg:grid-cols-3">
         <section aria-labelledby="titulo-recentes" className="lg:col-span-2">
@@ -194,5 +239,32 @@ export default async function InicioOrgao({ params }: PageProps<"/[orgao]">) {
         </ul>
       </section>
     </>
+  );
+}
+
+// Banner da home: com imagem, o texto fica numa faixa escura sobre ela (contraste garantido);
+// sem imagem, usa a cor do órgão.
+function CartaoBanner({ banner, principal, sozinho }: { banner: Banner; principal: boolean; sozinho: boolean }) {
+  const img = urlImagem(banner.imagem_caminho);
+  const altura = img ? (principal ? "min-h-72" : "min-h-44") : "min-h-40";
+  const tamanho = `${sozinho ? "lg:col-span-3 lg:row-span-2" : principal ? "lg:col-span-2 lg:row-span-2" : ""} ${altura}`;
+  return (
+    <article className={`faixa-orgao relative flex flex-col justify-end overflow-hidden rounded-lg bg-orgao text-white ${tamanho}`}>
+      {img && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={img} alt={banner.imagem_alt ?? ""} className="absolute inset-0 h-full w-full object-cover" />
+      )}
+      <div className={`relative p-5 ${img ? "bg-black/75" : ""}`}>
+        <h2 className={`font-bold leading-tight ${principal ? "text-2xl sm:text-3xl" : "text-lg"}`}>{banner.titulo}</h2>
+        {banner.texto && <p className={`mt-1 ${principal ? "text-lg" : "text-sm"}`}>{banner.texto}</p>}
+        {banner.link_url && (
+          <p className="mt-3">
+            <Link href={banner.link_url} className="inline-block rounded border border-white px-3 py-1 font-semibold text-white">
+              {banner.link_rotulo || "Saiba mais"}<span className="sr-only">: {banner.titulo}</span>
+            </Link>
+          </p>
+        )}
+      </div>
+    </article>
   );
 }

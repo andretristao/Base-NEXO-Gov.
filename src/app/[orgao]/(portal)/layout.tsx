@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { BarraAcessibilidade } from "@/components/BarraAcessibilidade";
 import { Icone } from "@/components/Icone";
+import { carregarAtalhos } from "@/lib/conteudo-dados";
 import { exigirOrgao } from "@/lib/dal";
 import { servicosDoOrgao } from "@/lib/portal";
 import { formatarCnpj } from "@/lib/tipos";
@@ -12,8 +13,16 @@ export default async function LayoutPortal({ children, params }: LayoutProps<"/[
   const servicos = servicosDoOrgao(orgao);
   const disponiveis = servicos.filter((s) => s.disponivel);
 
-  const menu = [{ href: base, rotulo: "Início" }, ...disponiveis.map((s) => ({ href: `${base}/${s.caminho}`, rotulo: s.titulo }))];
-  const maisBuscados = disponiveis.slice(0, 3);
+  const menu = [
+    { href: base, rotulo: "Início" },
+    { href: `${base}/noticias`, rotulo: "Notícias" },
+    ...disponiveis.map((s) => ({ href: `${base}/${s.caminho}`, rotulo: s.titulo })),
+  ];
+  // Atalhos cadastrados no painel; sem nenhum, os três primeiros serviços.
+  const atalhos = await carregarAtalhos(orgao.id);
+  const maisBuscados = atalhos.length
+    ? atalhos.map((a) => ({ chave: a.id, href: a.url, rotulo: a.rotulo }))
+    : disponiveis.slice(0, 3).map((s) => ({ chave: s.caminho, href: `${base}/${s.caminho}`, rotulo: s.titulo }));
 
   return (
     <>
@@ -54,10 +63,10 @@ export default async function LayoutPortal({ children, params }: LayoutProps<"/[
             {maisBuscados.length > 0 && (
               <div className="mt-2 flex flex-wrap items-center gap-2 text-sm">
                 <span className="text-texto-suave">Mais buscados:</span>
-                {maisBuscados.map((s) => (
-                  <Link key={s.caminho} href={`${base}/${s.caminho}`}
+                {maisBuscados.map((a) => (
+                  <Link key={a.chave} href={a.href}
                     className="rounded-full border border-borda px-3 py-0.5 text-texto no-underline hover:border-orgao hover:text-orgao">
-                    {s.titulo}
+                    {a.rotulo}
                   </Link>
                 ))}
               </div>

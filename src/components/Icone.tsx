@@ -27,6 +27,8 @@ const desenhos = {
   cadeado: <><rect x="5" y="11" width="14" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /></>,
   menu: <path d="M4 6h16M4 12h16M4 18h16" />,
   alerta: <><path d="M12 3l9 16H3z" /><path d="M12 10v4M12 17h.01" /></>,
+  imagem: <><rect x="3" y="4" width="18" height="16" rx="2" /><circle cx="9" cy="10" r="2" /><path d="M21 16l-5-5-9 9" /></>,
+  estrela: <path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3 6.4 20.2l1.1-6.2L3 9.6l6.2-.9z" />,
   movimento: <><path d="M4 7h13l-3-3M20 17H7l3 3" /></>,
 } as const;
 
