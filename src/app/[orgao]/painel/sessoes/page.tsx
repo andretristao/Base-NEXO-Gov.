@@ -53,7 +53,7 @@ export default async function Sessoes({ params }: PageProps<"/[orgao]/painel/ses
 
       {papel !== "consulta" && (
         <>
-          <h2 className="mt-10 text-xl font-semibold">Agendar sessão</h2>
+          <h2 id="agendar" className="mt-10 scroll-mt-4 text-xl font-semibold">Agendar sessão</h2>
           <p className="text-sm text-texto-suave">O número da sessão é sequencial por tipo e ano.</p>
           <Formulario acao={criarSessao} botao="Agendar" className="mt-3 grid max-w-2xl gap-4 sm:grid-cols-2">
             <input type="hidden" name="orgao" value={slug} />

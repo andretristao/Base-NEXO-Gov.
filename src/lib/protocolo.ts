@@ -163,3 +163,20 @@ export function minutaAta(orgao: { nome: string; municipio: string; uf: string }
   );
   return { titulo, texto: linhas.join("\n") };
 }
+
+// "há 5 min", "há 3 h", "há 2 dias"; acima de 30 dias, a data.
+export function tempoDecorrido(iso: string, agora = Date.now()) {
+  const minutos = Math.floor((agora - new Date(iso).getTime()) / 60000);
+  if (minutos < 1) return "agora";
+  if (minutos < 60) return `há ${minutos} min`;
+  const horas = Math.floor(minutos / 60);
+  if (horas < 24) return `há ${horas} h`;
+  const dias = Math.floor(horas / 24);
+  if (dias <= 30) return dias === 1 ? "ontem" : `há ${dias} dias`;
+  return formatarData(iso);
+}
+
+// Instante de n dias atrás, em ISO, para filtros de "parados" e "recentes".
+export function diasAtras(n: number) {
+  return new Date(Date.now() - n * 24 * 60 * 60 * 1000).toISOString();
+}
