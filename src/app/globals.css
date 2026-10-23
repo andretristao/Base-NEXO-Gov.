@@ -80,6 +80,21 @@ html {
   }
 }
 
+/* Dentro de um órgão, botões primários seguem a cor do órgão (validada com contraste AA). */
+.tema-orgao {
+  --primaria: var(--cor-orgao);
+}
+
+html.alto-contraste .tema-orgao {
+  --primaria: #ffff00;
+}
+
+/* A cor do órgão vem inline no .tema-orgao; no alto contraste os filhos usam amarelo.
+   Faixas com fundo da cor do órgão (.faixa-orgao) ficam pretas pela regra abaixo. */
+html.alto-contraste .tema-orgao > * {
+  --cor-orgao: #ffff00;
+}
+
 /* No alto contraste, links e textos claros viram amarelo sobre preto. */
 html.alto-contraste .text-white,
 html.alto-contraste header a {
@@ -87,8 +102,24 @@ html.alto-contraste header a {
 }
 
 html.alto-contraste .faixa-orgao,
-html.alto-contraste .faixa-orgao nav {
+html.alto-contraste .faixa-orgao nav,
+html.alto-contraste .faixa-escura {
   background-color: #000000;
+}
+
+/* Faixas escuras (rodapé do portal, barra e menu do painel): links claros.
+   Diálogos abertos dentro delas (busca rápida) mantêm as cores normais. */
+.faixa-escura a:not(dialog a) {
+  color: #ffffff;
+}
+
+html.alto-contraste .faixa-escura a:not(dialog a),
+html.alto-contraste .faixa-escura .text-white {
+  color: var(--link);
+}
+
+html.alto-contraste .faixa-escura {
+  border-color: var(--borda);
 }
 
 html.alto-contraste .faixa-orgao {
@@ -119,4 +150,8 @@ html.alto-contraste .faixa-orgao {
     transition: none !important;
     scroll-behavior: auto !important;
   }
+}
+
+dialog::backdrop {
+  background: rgb(0 0 0 / 0.5);
 }

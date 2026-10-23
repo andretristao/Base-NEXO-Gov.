@@ -169,3 +169,19 @@ export async function excluirDocumento(_: EstadoFormulario, dados: FormData): Pr
   revalidatePath(`/${slug}/painel/documentos`);
   redirect(`/${slug}/painel/documentos`);
 }
+
+// Arrastar e soltar no quadro de tramitação (ou o seletor "Mover para", sem mouse).
+export async function moverDocumento(slug: string, id: string, etapa: string): Promise<{ erro?: string }> {
+  await exigirAcessoOrgao(slug, [...EDITORES]);
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("tramitar_documento", {
+    p_documento: id,
+    p_etapa: etapa,
+    p_setor: null,
+    p_despacho: null,
+  });
+  if (error) return { erro: mensagemErro(error) };
+
+  revalidatePath(`/${slug}`, "layout");
+  return {};
+}

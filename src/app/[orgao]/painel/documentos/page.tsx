@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { CampoSelecao } from "@/components/Formulario";
 import { exigirAcessoOrgao } from "@/lib/dal";
-import { formatarData, identificacao, situacaoDocumento } from "@/lib/protocolo";
+import { diasAtras, formatarData, identificacao, situacaoDocumento } from "@/lib/protocolo";
 import { carregarConfiguracao } from "@/lib/protocolo-dados";
 import { createClient } from "@/lib/supabase/server";
 
@@ -24,6 +24,7 @@ export default async function Documentos({ params, searchParams }: PageProps<"/[
   const tipo = ler("tipo");
   const setor = ler("setor");
   const situacao = ler("situacao");
+  const parados = ler("parados") === "1";
   const busca = ler("q").replace(/[,()%]/g, " ").trim();
   const pagina = Math.max(1, Number(ler("pagina")) || 1);
 
@@ -42,6 +43,11 @@ export default async function Documentos({ params, searchParams }: PageProps<"/[
   if (situacao === "tramitacao") consulta = consulta.is("publicado_em", null).is("arquivado_em", null);
   if (situacao === "concluido") consulta = consulta.not("publicado_em", "is", null).is("arquivado_em", null);
   if (situacao === "arquivado") consulta = consulta.not("arquivado_em", "is", null);
+  // atalho do resumo: em tramitação e sem alteração há mais de 7 dias
+  if (parados) {
+    consulta = consulta.is("publicado_em", null).is("arquivado_em", null)
+      .lt("atualizado_em", diasAtras(7));
+  }
   if (busca) consulta = consulta.or(`assunto.ilike.%${busca}%,protocolo.ilike.%${busca}%,interessado.ilike.%${busca}%`);
   const { data, count } = await consulta
     .order("criado_em", { ascending: false })
@@ -49,7 +55,7 @@ export default async function Documentos({ params, searchParams }: PageProps<"/[
 
   const totalPaginas = Math.max(1, Math.ceil((count ?? 0) / POR_PAGINA));
   const link = (p: number) => {
-    const q = new URLSearchParams({ tipo, setor, situacao, q: busca, pagina: String(p) });
+    const q = new URLSearchParams({ tipo, setor, situacao, q: busca, pagina: String(p), ...(parados ? { parados: "1" } : {}) });
     return `?${q}`;
   };
 
@@ -57,9 +63,12 @@ export default async function Documentos({ params, searchParams }: PageProps<"/[
     <>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-bold">Documentos</h1>
-        {papel !== "consulta" && config.tipos.length > 0 && (
-          <Link href={`/${slug}/painel/documentos/novo`} className="botao-primario no-underline">Novo documento</Link>
-        )}
+        <div className="flex flex-wrap items-center gap-4">
+          <Link href={`/${slug}/painel/documentos/quadro`}>Ver no quadro</Link>
+          {papel !== "consulta" && config.tipos.length > 0 && (
+            <Link href={`/${slug}/painel/documentos/novo`} className="botao-primario no-underline">Novo documento</Link>
+          )}
+        </div>
       </div>
 
       {config.tipos.length === 0 && (
@@ -85,7 +94,10 @@ export default async function Documentos({ params, searchParams }: PageProps<"/[
         <button type="submit" className="botao-primario lg:col-start-5">Filtrar</button>
       </form>
 
-      <p className="mt-4 text-texto-suave" role="status">{count ?? 0} documento(s) encontrado(s).</p>
+      <p className="mt-4 text-texto-suave" role="status">
+        {count ?? 0} documento(s) encontrado(s){parados ? " parados há mais de 7 dias" : ""}.
+        {parados && <> <Link href="?">Limpar filtro</Link></>}
+      </p>
       <div className="mt-2 overflow-x-auto">
         <table className="w-full border-collapse text-left text-sm">
           <caption className="sr-only">Documentos protocolados, mais recentes primeiro</caption>
