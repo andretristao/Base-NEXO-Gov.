@@ -16,6 +16,19 @@ Esta é a base comum: cada órgão é um tenant isolado por RLS no Supabase, e o
 | Acessibilidade | eMAG 3.1 e WCAG 2.1 AA: atalhos Alt+1..4, alto contraste, fonte ajustável, VLibras, foco visível. Auditado com axe-core sem violações |
 | Hospedagem no Brasil | Supabase em `sa-east-1` (São Paulo) e funções Vercel em `gru1` (`vercel.json`) |
 
+## Módulo Protocolo e Processo Legislativo
+
+| Recurso | Onde |
+|---|---|
+| Tipos de documento (ofício, PL, decreto, requerimento, indicação, moção, ata) com numeração automática por ano | Painel › Configurar protocolo › Tipos |
+| Setores e fluxos de tramitação com etapas/status configuráveis (ex.: Criada → Análise → Secretaria → Jurídico → Publicada) | Painel › Configurar protocolo › Fluxos e etapas |
+| Modelo padrão de câmara ou prefeitura em um clique | Painel › Configurar protocolo |
+| Protocolo geral `AAAA/NNNNNN`, anexos (até 4 MB), tramitação com despacho e histórico imutável | Painel › Documentos |
+| Publicação restrita a gestor/administrador; documento publicado não é editado nem excluído | `tramitar_documento()` no banco |
+| Sessões ordinárias, extraordinárias, solenes e especiais com pauta por fase (Expediente, Tribuna Livre, Ordem do Dia…) e resultado | Painel › Sessões |
+| Ata gerada a partir da pauta, que segue o fluxo de atas | Painel › Sessão › Gerar ata |
+| Portal: sessões, proposições e atos publicados, consulta de protocolo (sem despachos nem dados pessoais) | `/<orgao>/sessoes`, `/<orgao>/documentos`, `/<orgao>/protocolo` |
+
 ## Stack
 
 Next.js 16 (App Router, TypeScript, Tailwind 4) na Vercel · Supabase (Postgres, Auth, RLS) · n8n para integrações.
@@ -29,7 +42,7 @@ src/proxy.ts                     renova a sessão e protege rotas restritas
 src/lib/dal.ts                   leitura de usuário/órgão e guardas de acesso
 src/lib/supabase/                clientes (servidor, navegador, admin)
 src/app/[orgao]/                 portal público do órgão
-src/app/[orgao]/painel/          área restrita (usuários, auditoria, dados do órgão)
+src/app/[orgao]/painel/          área restrita (protocolo, sessões, configuração, usuários, auditoria)
 src/app/entrar, conta/seguranca  login e cadastro/validação do 2FA
 supabase/migrations/             schema, RLS e auditoria
 supabase/tests/                  cenários de RLS rodando em Postgres local

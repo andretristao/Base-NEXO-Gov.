@@ -63,8 +63,8 @@ export function BarraAcessibilidade({ linkAcessibilidade }: { linkAcessibilidade
             </button>
           </li>
           <li className="flex gap-2">
-            <button type="button" onClick={() => mudarFonte(1)} aria-label="Aumentar fonte" className="underline">A+</button>
-            <button type="button" onClick={() => mudarFonte(-1)} aria-label="Diminuir fonte" className="underline">A-</button>
+            <button type="button" onClick={() => mudarFonte(1)} className="underline">A+<span className="sr-only"> aumentar fonte</span></button>
+            <button type="button" onClick={() => mudarFonte(-1)} className="underline">A-<span className="sr-only"> diminuir fonte</span></button>
           </li>
         </ul>
       </div>
