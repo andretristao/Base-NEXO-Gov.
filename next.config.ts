@@ -5,6 +5,10 @@ const nextConfig: NextConfig = {
   // fica desligado até os módulos públicos precisarem de cache fino.
   cacheComponents: false,
   poweredByHeader: false,
+  experimental: {
+    // Anexos do protocolo vão até 4 MB; a Vercel aceita corpo de até 4,5 MB.
+    serverActions: { bodySizeLimit: "4.5mb" },
+  },
   turbopack: {
     rules: {
       "*.css": {

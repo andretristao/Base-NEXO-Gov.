@@ -19,6 +19,9 @@ export default async function LayoutOrgao({ children, params }: LayoutProps<"/[o
 
   const menu = [
     { href: base, rotulo: "Início" },
+    ...(orgao.tipo === "camara" ? [{ href: `${base}/sessoes`, rotulo: "Sessões" }] : []),
+    { href: `${base}/documentos`, rotulo: orgao.tipo === "camara" ? "Proposições e atos" : "Atos publicados" },
+    { href: `${base}/protocolo`, rotulo: "Consulta de protocolo" },
     { href: `${base}/diario-oficial`, rotulo: "Diário Oficial" },
     { href: `${base}/transparencia`, rotulo: "Transparência" },
     { href: `${base}/ouvidoria`, rotulo: "Ouvidoria" },

@@ -536,7 +536,8 @@ begin
 end $$;
 
 -- ---------------------------------------------------------------------------
--- Consulta pública de protocolo (sem despachos nem interessado: LGPD)
+-- Consulta pública de protocolo. Sem despachos nem interessado, e o assunto
+-- só aparece se o documento for público (LGPD: ofícios podem ter dados pessoais).
 -- ---------------------------------------------------------------------------
 
 create function public.consultar_protocolo(p_orgao uuid, p_protocolo text)
@@ -550,7 +551,7 @@ as $$
     'sigla', t.sigla,
     'numero', d.numero,
     'ano', d.ano,
-    'assunto', d.assunto,
+    'assunto', case when public.documento_publico(d.id) then d.assunto end,
     'etapa', e.nome,
     'setor', s.nome,
     'criado_em', d.criado_em,

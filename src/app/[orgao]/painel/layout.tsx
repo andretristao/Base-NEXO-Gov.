@@ -4,13 +4,16 @@ import { rotuloPapel } from "@/lib/tipos";
 
 export default async function LayoutPainel({ children, params }: LayoutProps<"/[orgao]/painel">) {
   const { orgao: slug } = await params;
-  const { usuario, papel } = await exigirAcessoOrgao(slug);
+  const { usuario, papel, orgao } = await exigirAcessoOrgao(slug);
   const base = `/${slug}/painel`;
 
   const itens = [
     { href: base, rotulo: "Resumo" },
+    { href: `${base}/documentos`, rotulo: "Documentos" },
+    ...(orgao.tipo === "camara" ? [{ href: `${base}/sessoes`, rotulo: "Sessões" }] : []),
     ...(podeAdministrar(papel)
       ? [
+          { href: `${base}/configuracao`, rotulo: "Configurar protocolo" },
           { href: `${base}/orgao`, rotulo: "Dados do órgão" },
           { href: `${base}/usuarios`, rotulo: "Usuários e perfis" },
           { href: `${base}/auditoria`, rotulo: "Auditoria" },
