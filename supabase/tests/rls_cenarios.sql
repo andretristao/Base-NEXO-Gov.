@@ -218,3 +218,42 @@ reset role;
 set role anon; set request.jwt.claims = '';
 select 'anon vê sessões e pauta da câmara (esperado 3 1): ' || (select count(*) from public.sessoes) || ' ' || (select count(*) from public.pauta_itens);
 reset role;
+
+\echo '--- conteúdo: notícias, banners e atalhos'
+set role authenticated; set request.jwt.claims = '{"sub":"00000000-0000-0000-0000-00000000000b","aal":"aal2"}';
+insert into public.noticias (orgao_id, titulo, publicada) values ('10000000-0000-0000-0000-000000000001', 'Publicada', true);
+insert into public.noticias (orgao_id, titulo) values ('10000000-0000-0000-0000-000000000001', 'Rascunho');
+insert into public.noticias (orgao_id, titulo, publicada, publicado_em) values ('10000000-0000-0000-0000-000000000001', 'Agendada', true, now() + interval '1 day');
+insert into public.noticias (orgao_id, titulo, imagem_caminho) values ('10000000-0000-0000-0000-000000000001', 'Sem alt', 'x/y.png');
+insert into public.noticias (orgao_id, titulo) values ('10000000-0000-0000-0000-000000000002', 'Na câmara');
+select 'B vê as 3 notícias da pref (esperado 3): ' || count(*) from public.noticias;
+select 'publicar sem data preenche a data (esperado t): ' || (publicado_em is not null) from public.noticias where titulo='Publicada';
+insert into public.banners (orgao_id, titulo) values ('10000000-0000-0000-0000-000000000001', 'No ar');
+insert into public.banners (orgao_id, titulo, fim_em) values ('10000000-0000-0000-0000-000000000001', 'Vencido', now() - interval '1 day');
+insert into public.banners (orgao_id, titulo, link_url) values ('10000000-0000-0000-0000-000000000001', 'Link perigoso', 'javascript:alert(1)');
+insert into public.atalhos (orgao_id, rotulo, url) values ('10000000-0000-0000-0000-000000000001', 'IPTU', '/pref/iptu');
+insert into public.atalhos (orgao_id, rotulo, url, ativo) values ('10000000-0000-0000-0000-000000000001', 'Oculto', '/pref/x', false);
+insert into storage.objects (bucket_id, name) values ('conteudo', '10000000-0000-0000-0000-000000000001/foto.png');
+insert into storage.objects (bucket_id, name) values ('conteudo', '10000000-0000-0000-0000-000000000002/foto.png');
+insert into storage.objects (bucket_id, name) values ('conteudo', 'sem-orgao/foto.png');
+select 'B enviou só para a pref (esperado 1): ' || count(*) from storage.objects where bucket_id='conteudo';
+set request.jwt.claims = '{"sub":"00000000-0000-0000-0000-00000000000b","aal":"aal1"}';
+update public.noticias set titulo='sem 2FA' where titulo='Rascunho';
+select 'B aal1 não altera (esperado 0): ' || count(*) from public.noticias where titulo='sem 2FA';
+reset role;
+
+set role anon; set request.jwt.claims = '';
+select 'anon vê só a notícia publicada (esperado Publicada): ' || string_agg(titulo, ',') from public.noticias;
+select 'anon vê só o banner no ar (esperado No ar): ' || string_agg(titulo, ',') from public.banners;
+select 'anon vê só o atalho ativo (esperado IPTU): ' || string_agg(rotulo, ',') from public.atalhos;
+insert into public.noticias (orgao_id, titulo) values ('10000000-0000-0000-0000-000000000001', 'anon');
+reset role;
+
+set role authenticated; set request.jwt.claims = '{"sub":"00000000-0000-0000-0000-00000000000c","aal":"aal2"}';
+select 'C vê notícias da pref (esperado 1 = só a publicada): ' || count(*) from public.noticias where orgao_id='10000000-0000-0000-0000-000000000001';
+delete from public.noticias where orgao_id='10000000-0000-0000-0000-000000000001';
+update public.banners set titulo='hack' where orgao_id='10000000-0000-0000-0000-000000000001';
+reset role;
+select 'C não apagou nem alterou (esperado 3 2): ' || (select count(*) from public.noticias where orgao_id='10000000-0000-0000-0000-000000000001')
+  || ' ' || (select count(*) from public.banners where titulo <> 'hack');
+select 'auditoria registrou o conteúdo (esperado >=5): ' || count(*) from public.auditoria where tabela in ('public.noticias', 'public.banners', 'public.atalhos');

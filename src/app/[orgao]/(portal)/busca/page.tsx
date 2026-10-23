@@ -42,7 +42,19 @@ export default async function Busca({ params, searchParams }: PageProps<"/[orgao
         .limit(LIMITE))
     : { data: [], count: 0 };
 
-  const total = servicos.length + (documentos.count ?? 0);
+  const noticias = filtro
+    ? (await (await createClient())
+        .from("noticias")
+        .select("id, titulo, resumo, publicado_em", { count: "exact" })
+        .eq("orgao_id", orgao.id)
+        .eq("publicada", true)
+        .lte("publicado_em", new Date().toISOString())
+        .or(`titulo.ilike.%${filtro}%,resumo.ilike.%${filtro}%,corpo.ilike.%${filtro}%`)
+        .order("publicado_em", { ascending: false })
+        .limit(LIMITE))
+    : { data: [], count: 0 };
+
+  const total = servicos.length + (documentos.count ?? 0) + (noticias.count ?? 0);
 
   return (
     <>
@@ -75,6 +87,21 @@ export default async function Busca({ params, searchParams }: PageProps<"/[orgao
                     : <span className="font-semibold">{s.titulo} <span className="text-sm font-normal text-texto-suave">(em breve)</span></span>}
                   <p className="text-sm text-texto-suave">{s.texto}</p>
                 </div>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {(noticias.data?.length ?? 0) > 0 && (
+        <section aria-labelledby="titulo-noticias" className="mt-8">
+          <h2 id="titulo-noticias" className="text-xl font-semibold">Notícias</h2>
+          <ul className="mt-3 divide-y divide-borda">
+            {noticias.data!.map((n) => (
+              <li key={n.id} className="py-3">
+                <Link href={`${base}/noticias/${n.id}`} className="font-semibold">{n.titulo}</Link>
+                {n.resumo && <p>{n.resumo}</p>}
+                <p className="text-sm text-texto-suave">Publicada em {formatarData(n.publicado_em)}</p>
               </li>
             ))}
           </ul>

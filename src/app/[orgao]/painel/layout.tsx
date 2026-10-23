@@ -21,6 +21,14 @@ export default async function LayoutPainel({ children, params }: LayoutProps<"/[
         ...(camara ? [{ href: `${base}/sessoes`, rotulo: "Sessões", icone: "sessao" } as const] : []),
       ],
     },
+    {
+      titulo: "Conteúdo do portal",
+      itens: [
+        { href: `${base}/conteudo/noticias`, rotulo: "Notícias", icone: "diario" },
+        { href: `${base}/conteudo/banners`, rotulo: "Banners", icone: "imagem" },
+        { href: `${base}/conteudo/atalhos`, rotulo: "Mais buscados", icone: "estrela" },
+      ],
+    },
     ...(podeAdministrar(papel)
       ? [{
           titulo: "Administração",
@@ -46,6 +54,7 @@ export default async function LayoutPainel({ children, params }: LayoutProps<"/[
     ...(papel !== "consulta"
       ? [
           { href: `${base}/documentos/novo`, rotulo: "Novo documento", icone: "mais" } as const,
+          { href: `${base}/conteudo/noticias/nova`, rotulo: "Nova notícia", icone: "mais" } as const,
           ...(camara ? [{ href: `${base}/sessoes#agendar`, rotulo: "Agendar sessão", icone: "mais" } as const] : []),
         ]
       : []),

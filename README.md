@@ -29,6 +29,17 @@ Esta é a base comum: cada órgão é um tenant isolado por RLS no Supabase, e o
 | Ata gerada a partir da pauta, que segue o fluxo de atas | Painel › Sessão › Gerar ata |
 | Portal: sessões, proposições e atos publicados, consulta de protocolo (sem despachos nem dados pessoais) | `/<orgao>/sessoes`, `/<orgao>/documentos`, `/<orgao>/protocolo` |
 
+## Módulo Conteúdo do portal
+
+| Recurso | Onde |
+|---|---|
+| Notícias com resumo, texto, categoria, imagem de capa (texto alternativo obrigatório), destaque, rascunho e agendamento | Painel › Conteúdo › Notícias |
+| Banners da página inicial com link, ordem e período de exibição | Painel › Conteúdo › Banners |
+| Atalhos "mais buscados" do cabeçalho | Painel › Conteúdo › Mais buscados |
+| Brasão enviado pelo painel | Painel › Dados do órgão |
+| Imagens no bucket público `conteudo` (JPG/PNG/WebP, até 2 MB), pasta por órgão | `supabase/migrations/20261023000002_conteudo.sql` |
+| Portal: banners e notícias na home, lista por categoria, página da notícia, busca | `/<orgao>`, `/<orgao>/noticias` |
+
 ## Stack
 
 Next.js 16 (App Router, TypeScript, Tailwind 4) na Vercel · Supabase (Postgres, Auth, RLS) · n8n para integrações.
@@ -41,8 +52,8 @@ Next.js 16 (App Router, TypeScript, Tailwind 4) na Vercel · Supabase (Postgres,
 src/proxy.ts                     renova a sessão e protege rotas restritas
 src/lib/dal.ts                   leitura de usuário/órgão e guardas de acesso
 src/lib/supabase/                clientes (servidor, navegador, admin)
-src/app/[orgao]/                 portal público do órgão
-src/app/[orgao]/painel/          área restrita (protocolo, sessões, configuração, usuários, auditoria)
+src/app/[orgao]/(portal)/        portal público do órgão (home, notícias, busca, protocolo, sessões)
+src/app/[orgao]/painel/          área restrita (resumo, quadro, protocolo, sessões, conteúdo, configuração, usuários, auditoria)
 src/app/entrar, conta/seguranca  login e cadastro/validação do 2FA
 supabase/migrations/             schema, RLS e auditoria
 supabase/tests/                  cenários de RLS rodando em Postgres local

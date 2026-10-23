@@ -10,6 +10,7 @@ export const metadata: Metadata = { title: "Resumo" };
 
 const modulos = [
   { nome: "Protocolo e processo legislativo", situacao: "Disponível" },
+  { nome: "Conteúdo do portal", situacao: "Disponível" },
   { nome: "Diário Oficial", situacao: "Em construção" },
   { nome: "Portal da Transparência", situacao: "Em construção" },
   { nome: "Integração PNCP", situacao: "Em construção" },
@@ -59,7 +60,7 @@ export default async function ResumoPainel({ params }: PageProps<"/[orgao]/paine
   const contar = (tabela: string) => supabase.from(tabela).select("*", { count: "exact", head: true }).eq("orgao_id", orgao.id);
   const emTramitacao = () => contar("documentos").is("publicado_em", null).is("arquivado_em", null);
 
-  const [tramitando, novos, parados, publicadosMes, agendadas, usuariosAtivos, porEtapa, movimentos, proxima] = await Promise.all([
+  const [tramitando, novos, parados, publicadosMes, agendadas, usuariosAtivos, porEtapa, movimentos, proxima, noticias] = await Promise.all([
     emTramitacao(),
     contar("documentos").gte("criado_em", seteDias),
     emTramitacao().lt("atualizado_em", seteDias),
@@ -74,6 +75,7 @@ export default async function ResumoPainel({ params }: PageProps<"/[orgao]/paine
       ? supabase.from("sessoes").select("id, tipo, numero, ano, data_hora, local").eq("orgao_id", orgao.id)
           .eq("situacao", "agendada").gte("data_hora", hoje.toISOString()).order("data_hora").limit(1).maybeSingle()
       : Promise.resolve({ data: null }),
+    contar("noticias").eq("publicada", true),
   ]);
 
   // Contagem por etapa, na ordem do fluxo.
@@ -96,6 +98,7 @@ export default async function ResumoPainel({ params }: PageProps<"/[orgao]/paine
   const podeEditar = papel !== "consulta";
   const acoes = [
     ...(podeEditar && config.tipos.length ? [{ href: `${base}/documentos/novo`, rotulo: "Novo documento", icone: "mais" as const }] : []),
+    ...(podeEditar ? [{ href: `${base}/conteudo/noticias/nova`, rotulo: "Nova notícia", icone: "diario" as const }] : []),
     ...(podeEditar && camara ? [{ href: `${base}/sessoes#agendar`, rotulo: "Agendar sessão", icone: "sessao" as const }] : []),
     { href: `${base}/documentos/quadro`, rotulo: "Quadro de tramitação", icone: "quadro" as const },
     { href: `/${slug}`, rotulo: "Ver portal", icone: "olho" as const },
@@ -138,6 +141,8 @@ export default async function ResumoPainel({ params }: PageProps<"/[orgao]/paine
         {camara && (
           <Indicador rotulo="Sessões agendadas" valor={agendadas.count ?? 0} icone="sessao" href={`${base}/sessoes`} />
         )}
+        <Indicador rotulo="Notícias publicadas" valor={noticias.count ?? 0} icone="diario"
+          href={`${base}/conteudo/noticias?situacao=publicada`} />
         <Indicador rotulo="Usuários ativos" valor={usuariosAtivos.count ?? "—"} icone="usuarios"
           href={podeAdministrar(papel) ? `${base}/usuarios` : undefined} />
         <Indicador rotulo="2FA obrigatório" valor={orgao.exigir_2fa ? "Sim" : "Não"} icone="cadeado"

@@ -1,12 +1,14 @@
 "use client";
 
-import { useActionState, type ReactNode } from "react";
+import { startTransition, useActionState, useEffect, useRef, type FormEvent, type ReactNode } from "react";
 
 export type EstadoFormulario = { erro?: string; ok?: string } | undefined;
 
 type Acao = (estado: EstadoFormulario, dados: FormData) => Promise<EstadoFormulario>;
 
 // Formulário com mensagem de erro/sucesso anunciada a leitores de tela.
+// Envia sem o reset automático do React: em caso de erro o que foi digitado continua
+// na tela; com sucesso os campos voltam aos valores padrão (já atualizados pelo servidor).
 export function Formulario({ acao, children, botao, className, classeBotao }: {
   acao: Acao;
   children: ReactNode;
@@ -15,9 +17,20 @@ export function Formulario({ acao, children, botao, className, classeBotao }: {
   classeBotao?: string;
 }) {
   const [estado, enviar, pendente] = useActionState(acao, undefined);
+  const formulario = useRef<HTMLFormElement>(null);
+
+  useEffect(() => {
+    if (estado?.ok) formulario.current?.reset();
+  }, [estado]);
+
+  function submeter(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const dados = new FormData(e.currentTarget);
+    startTransition(() => enviar(dados));
+  }
 
   return (
-    <form action={enviar} className={className ?? "space-y-4"}>
+    <form ref={formulario} action={enviar} onSubmit={submeter} className={className ?? "space-y-4"}>
       {children}
       <div role="status" aria-live="polite">
         {estado?.erro && <p className="font-semibold text-erro">{estado.erro}</p>}

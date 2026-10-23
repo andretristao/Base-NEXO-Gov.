@@ -2,6 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import type { EstadoFormulario } from "@/components/Formulario";
+import { urlImagem } from "@/lib/conteudo";
+import { caminhoDaUrl, enviarImagem, removerImagem } from "@/lib/conteudo-imagens";
 import { contrasteComBranco } from "@/lib/contraste";
 import { exigirAcessoOrgao } from "@/lib/dal";
 import { createClient } from "@/lib/supabase/server";
@@ -30,8 +32,22 @@ export async function salvarOrgao(_: EstadoFormulario, dados: FormData): Promise
   }
 
   const supabase = await createClient();
+  // Brasão enviado pelo painel vai para o bucket de imagens do conteúdo.
+  const arquivo = dados.get("brasao_arquivo");
+  let novoBrasao: string | null = null;
+  if (arquivo instanceof File && arquivo.size > 0) {
+    const envio = await enviarImagem(supabase, orgao.id, arquivo, "brasao-");
+    if ("erro" in envio) return { erro: envio.erro };
+    novoBrasao = envio.caminho;
+    alteracoes.brasao_url = urlImagem(novoBrasao);
+  }
+
   const { error } = await supabase.from("orgaos").update(alteracoes).eq("id", orgao.id);
-  if (error) return { erro: error.message };
+  if (error) {
+    await removerImagem(supabase, novoBrasao);
+    return { erro: error.message };
+  }
+  if (orgao.brasao_url !== alteracoes.brasao_url) await removerImagem(supabase, caminhoDaUrl(orgao.brasao_url));
 
   revalidatePath(`/${slug}`, "layout");
   return { ok: "Dados salvos." };
